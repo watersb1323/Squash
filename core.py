@@ -11,10 +11,10 @@ from openpyxl import load_workbook
 
 # Define file variables
 weekly_file = 'Squash_results.xlsx'
-squash_path = 'C:\\Users\\brwaters\\Google Drive\\Squash\\'
+squash_path = 'C:\\Users\\beano\\Google Drive\\Squash\\'
 
 # Define switches
-week_num = 2
+week_num = 3
 master = True
 
 # Define columns for statistics
@@ -107,7 +107,7 @@ for col in weekly_stats_df.columns[1:]:
     weekly_stats_df[col] = weekly_stats_df[col].astype(int)
   
 # Sort values by points
-weekly_stats_df = weekly_stats_df.sort_values(['Points', 'DIFF'], ascending=False)
+weekly_stats_df = weekly_stats_df.sort_values(['Normalised Score', 'DIFF'], ascending=False)
 print(weekly_stats_df)
 
 # Write player_database to excel document
@@ -119,6 +119,6 @@ writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 if master:
     weekly_stats_df.to_excel(writer, sheet_name='Master_table', index=False)
 else:
-    weekly_stats_df.to_excel(writer, sheet_name='Week' + week_num + '_table', index=False)
+    weekly_stats_df.to_excel(writer, sheet_name='Week{0}_table'.format(week_num), index=False)
 
 writer.save()
