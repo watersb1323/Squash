@@ -58,6 +58,7 @@ else:
 players_tmp = weekly_games_df['Player 1'].unique().tolist() + weekly_games_df['Player 2'].unique().tolist()
 players = list(set(players_tmp))
 
+# Create empty dataframe with necessary columns
 weekly_stats_df = pd.DataFrame(columns=stats_columms)
 
 # Go through each player and retrieve their results
@@ -81,6 +82,7 @@ for player in players:
     WB = 0
     LB = 0
     
+    # Determine points
     for _, game in player_games_df.iterrows():
         # Points for and against
         sc1_tmp = game['Score 1']
