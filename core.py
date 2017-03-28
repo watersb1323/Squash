@@ -20,6 +20,12 @@ squash_path = 'C:\\Users\\beano\\Google Drive\\Squash\\'
 week_num = 4
 master = True
 
+# Set up excel Writer object
+book = load_workbook(squash_path + weekly_file)
+writer = pd.ExcelWriter(squash_path + weekly_file, engine='openpyxl') 
+writer.book = book
+writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
 # Define columns for statistics
 stats_columms = ['Name',\
                  'PL',\
@@ -34,6 +40,20 @@ stats_columms = ['Name',\
                  'Normalised Score'
                  ]
 
+# Define columns for head-to-head sheets
+head_to_head_columms = ['Player',\
+                         'PL',\
+                         'W',\
+                         'L',\
+                         'PF',\
+                         'PA',\
+                         'DIFF',\
+                         'WB',\
+                         'LB',\
+                         'Points',\
+                         'Normalised Score'
+                         ]
+
 # Determine if you are running for an individual week or for the all weeks
 if master:
     # Read in all weeks results
@@ -43,11 +63,11 @@ if master:
         
         if week == 1:
             weekly_games_df = tmp_games_df
-            tmp_tables_df['week'] = week
+            tmp_tables_df['Week'] = week
             weekly_tables_df = tmp_tables_df
         else:
             weekly_games_df = weekly_games_df.append(tmp_games_df)
-            tmp_tables_df['week'] = week
+            tmp_tables_df['Week'] = week
             weekly_tables_df = weekly_tables_df.append(tmp_tables_df)
             #print(weekly_games_df)
 else:
@@ -75,6 +95,7 @@ for player in players:
     
     # Obtain table of players weekly results
     player_tables_df = weekly_tables_df.loc[(weekly_tables_df['Name'] == player)]
+    # print(player_tables_df)
     
     # Obtain points for and points against
     PF = 0
@@ -106,16 +127,138 @@ for player in players:
     W = player_wins_df.shape[0]
     L = PL - W
     DIFF = PF - PA
-    BP = 0
     Points = W*3 + WB + LB
     
     # Determine whether to use normalised score (for weekly table) or weighted score (master table)
     normalised_score = 0
     if master == True:
+        # Determine normalised score for master 
         for _, weekly_result in player_tables_df.iterrows():
-            wk = weekly_result['week']
+            wk = weekly_result['Week']
             n_score = weekly_result['Normalised Score']            
-            normalised_score += int(n_score*wk/triangular(week_num))
+            normalised_score += n_score*wk/triangular(week_num)
+            # print(player, wk, n_score, normalised_score)
+        normalised_score = int(normalised_score)
+        
+        # Create table of accumulative scores for head-to-heads
+        # Create empty dataframe with necessary columns
+        vs_player_df = pd.DataFrame(columns=head_to_head_columms)
+        for vs_player in players:
+            # Skip if it is the vs_player is the same as player
+            if player == vs_player:
+                continue
+            
+            # Determine games player participated in against this particular player
+            vs_player_games_df = player_games_df.loc[(player_games_df['Player 1'] == vs_player) | (player_games_df['Player 2'] == vs_player)]
+            
+            # continue if player has never played against this player
+            if vs_player_games_df.shape[0] == 0:
+                continue
+            
+            # Determine games won by player
+            vs_player_wins_df = player_games_df.loc[((player_games_df['Player 1'] == vs_player) &\
+                                                    (player_games_df['Score 1'] > player_games_df['Score 2']))\
+                                                    |
+                                                    ((player_games_df['Player 2'] == vs_player) &\
+                                                    (player_games_df['Score 2'] > player_games_df['Score 1']))]
+                                                    
+            # Obtain points for and points against
+            vs_PF = 0
+            vs_PA = 0
+            vs_WB = 0
+            vs_LB = 0
+            
+            # Determine points
+            for _, vs_game in vs_player_games_df.iterrows():
+                # Points for and against
+                vs_sc1_tmp = vs_game['Score 1']
+                vs_sc2_tmp = vs_game['Score 2']
+                if vs_game['Player 1'] == player:
+                    vs_PF += vs_sc1_tmp
+                    vs_PA += vs_sc2_tmp
+                    vs_diff_tmp = vs_sc1_tmp - vs_sc2_tmp
+                elif vs_game['Player 2'] == player:
+                    vs_PF += vs_sc2_tmp
+                    vs_PA += vs_sc1_tmp
+                    vs_diff_tmp = vs_sc2_tmp - vs_sc1_tmp
+                # Bonus points
+                if vs_diff_tmp >= 7:
+                    vs_WB += 1
+                elif vs_diff_tmp >= -3 and vs_diff_tmp < 0:
+                    vs_LB += 1
+            
+            # Metrics for table
+            vs_PL = vs_player_games_df.shape[0]
+            vs_L = vs_player_wins_df.shape[0]
+            vs_W = vs_PL - vs_L
+            vs_DIFF = vs_PF - vs_PA
+            vs_Points = vs_W*3 + vs_WB + vs_LB
+            vs_normalised_score = int((vs_Points/vs_PL)*(100.0/4.0))
+            
+            # Create row for player data to be added to the dataframe    
+            vs_player_data = [vs_player, vs_PL, vs_W, vs_L, vs_PF, vs_PA, vs_DIFF, vs_WB, vs_LB, vs_Points, vs_normalised_score]
+            
+            # Construct vs_player dataframe with data from each head to head
+            vs_player_tmp_df = pd.DataFrame(np.array([vs_player_data]), columns=head_to_head_columms)
+            vs_player_df = vs_player_df.append(vs_player_tmp_df)
+        
+        # Convert all number columns to integers    
+        for col in vs_player_df.columns[1:]:
+            vs_player_df[col] = vs_player_df[col].astype(int)
+            
+        # Sort values by points
+        vs_player_df = vs_player_df.sort_values(['Normalised Score', 'DIFF'], ascending=False)
+        # print(vs_player_df)
+        
+        # Write to excel document
+        vs_player_df.to_excel(writer, sheet_name='{0}'.format(player), startrow=1, index=False)
+        
+        # --------------------------
+        # Add combined weekly tables
+        # --------------------------
+        # Obtain table of players weekly results
+        h2h_weekly_tables_df = weekly_tables_df.loc[(weekly_tables_df['Name'] == player)]
+        
+        # Obtain columns for this table
+        tab_cols = list(h2h_weekly_tables_df)
+        
+        # Move the 'week' column to head of list using index, pop and 
+        # insert and also remove the 'Name' column
+        tab_cols.insert(0, tab_cols.pop(tab_cols.index('Week')))
+        tab_cols.pop(tab_cols.index('Name'))
+        h2h_weekly_tables_df = h2h_weekly_tables_df.ix[:, tab_cols]
+        
+        # Order the new table by the week number, to put emphasis on the most recent week
+        h2h_weekly_tables_df = h2h_weekly_tables_df.sort_values(['Week'], ascending=False)
+        
+        # Add total row
+        tot_row = h2h_weekly_tables_df.sum()
+        tot_row = pd.DataFrame([tot_row], columns=h2h_weekly_tables_df.columns)
+        # Cast entire dataframe as int and then cast first column as string
+        tot_row['Week'] = tot_row['Week'].astype(str)
+        for col in tot_row.columns[1:]:
+            tot_row[col] = tot_row[col].astype(int)
+        tot_row['Week'] = 'Total'
+
+        # Add average row
+        avg_row = h2h_weekly_tables_df.mean()
+        avg_row = pd.DataFrame([avg_row], columns=h2h_weekly_tables_df.columns)
+        # Cast entire dataframe as int and then cast first column as string
+        avg_row['Week'] = avg_row['Week'].astype(str)
+        for col in avg_row.columns[1:]:
+            avg_row[col] = avg_row[col].astype(int)
+        avg_row['Week'] = 'Averages'
+        
+        # Cast entire dataframe as int and then cast first column as string
+        h2h_weekly_tables_df['Week'] = h2h_weekly_tables_df['Week'].astype(str)
+        for col in h2h_weekly_tables_df.columns[1:]:
+            h2h_weekly_tables_df[col] = h2h_weekly_tables_df[col].astype(int)
+        
+        h2h_weekly_tables_df = h2h_weekly_tables_df.append(tot_row, ignore_index=True) 
+        h2h_weekly_tables_df = h2h_weekly_tables_df.append(avg_row, ignore_index=True)  
+        
+        # Write table to Writer
+        h2h_weekly_tables_df.to_excel(writer, sheet_name='{0}'.format(player), startrow=14, index=False)
     else:
         normalised_score = int((Points/PL)*(100.0/4.0))
     
@@ -132,13 +275,7 @@ for col in weekly_stats_df.columns[1:]:
   
 # Sort values by points
 weekly_stats_df = weekly_stats_df.sort_values(['Normalised Score', 'DIFF'], ascending=False)
-print(weekly_stats_df)
-
-# Write player_database to excel document
-book = load_workbook(squash_path + weekly_file)
-writer = pd.ExcelWriter(squash_path + weekly_file, engine='openpyxl') 
-writer.book = book
-writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+# print(weekly_stats_df)
 
 if master:
     weekly_stats_df.to_excel(writer, sheet_name='Master_table', index=False)
