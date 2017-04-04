@@ -14,10 +14,11 @@ def triangular(n):
 
 # Define file variables
 weekly_file = 'Squash_results.xlsx'
-squash_path = 'C:\\Users\\beano\\Google Drive\\Squash\\'
+# squash_path = 'C:\\Users\\beano\\Google Drive\\Squash\\'
+squash_path = 'C:\\Users\\brwaters\\Google Drive\\Squash\\'
 
 # Define switches
-week_num = 4
+week_num = 5
 master = True
 
 # Set up excel Writer object
@@ -93,9 +94,9 @@ for player in players:
                                             ((weekly_games_df['Player 2'] == player) &\
                                             (weekly_games_df['Score 2'] > weekly_games_df['Score 1']))]
     
-    # Obtain table of players weekly results
-    player_tables_df = weekly_tables_df.loc[(weekly_tables_df['Name'] == player)]
-    # print(player_tables_df)
+    if master:
+        # Obtain table of players weekly results
+        player_tables_df = weekly_tables_df.loc[(weekly_tables_df['Name'] == player)]
     
     # Obtain points for and points against
     PF = 0
