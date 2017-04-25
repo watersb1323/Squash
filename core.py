@@ -21,6 +21,11 @@ squash_path = 'C:\\Users\\brwaters\\Google Drive\\Squash\\'
 week_num = 7
 master = True
 
+# Define Bonus points
+win_points = 3
+win_bonus = 7
+lose_bonus = -3
+
 # Set up excel Writer object
 book = load_workbook(squash_path + weekly_file)
 writer = pd.ExcelWriter(squash_path + weekly_file, engine='openpyxl') 
@@ -118,9 +123,9 @@ for player in players:
             PA += sc1_tmp
             diff_tmp = sc2_tmp - sc1_tmp
         # Bonus points
-        if diff_tmp >= 7:
+        if diff_tmp >= lose_bonus:
             WB += 1
-        elif diff_tmp >= -3 and diff_tmp < 0:
+        elif diff_tmp >= win_bonus and diff_tmp < 0:
             LB += 1
     
     # Metrics for table
@@ -128,7 +133,7 @@ for player in players:
     W = player_wins_df.shape[0]
     L = PL - W
     DIFF = PF - PA
-    Points = W*3 + WB + LB
+    Points = W*win_points + WB + LB
     
     # Determine whether to use normalised score (for weekly table) or weighted score (master table)
     normalised_score = 0
@@ -183,9 +188,9 @@ for player in players:
                     vs_PA += vs_sc1_tmp
                     vs_diff_tmp = vs_sc2_tmp - vs_sc1_tmp
                 # Bonus points
-                if vs_diff_tmp >= 7:
+                if vs_diff_tmp >= lose_bonus:
                     vs_WB += 1
-                elif vs_diff_tmp >= -3 and vs_diff_tmp < 0:
+                elif vs_diff_tmp >= win_bonus and vs_diff_tmp < 0:
                     vs_LB += 1
             
             # Metrics for table
@@ -193,8 +198,9 @@ for player in players:
             vs_L = vs_player_wins_df.shape[0]
             vs_W = vs_PL - vs_L
             vs_DIFF = vs_PF - vs_PA
-            vs_Points = vs_W*3 + vs_WB + vs_LB
-            vs_normalised_score = int((vs_Points/vs_PL)*(100.0/4.0))
+            vs_Points = vs_W*win_points + vs_WB + vs_LB
+            total_points_achievable = win_points + win_bonus
+            vs_normalised_score = int((vs_Points/vs_PL)*(100.0/float(total_points_achievable)))
             
             # Create row for player data to be added to the dataframe    
             vs_player_data = [vs_player, vs_PL, vs_W, vs_L, vs_PF, vs_PA, vs_DIFF, vs_WB, vs_LB, vs_Points, vs_normalised_score]
