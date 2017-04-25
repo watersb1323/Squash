@@ -18,7 +18,7 @@ weekly_file = 'Squash_results.xlsx'
 squash_path = 'C:\\Users\\brwaters\\Google Drive\\Squash\\'
 
 # Define switches
-week_num = 6
+week_num = 7
 master = True
 
 # Set up excel Writer object
