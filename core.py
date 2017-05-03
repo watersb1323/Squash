@@ -18,7 +18,7 @@ weekly_file = 'Squash_results.xlsx'
 squash_path = 'C:\\Users\\brwaters\\Google Drive\\Squash\\'
 
 # Define switches
-week_num = 7
+week_num = 8
 master = True
 
 # Define Bonus points
@@ -43,7 +43,7 @@ stats_columms = ['Name',\
                  'WB',\
                  'LB',\
                  'Points',\
-                 'Normalised Score'
+                 'Percentage'
                  ]
 
 # Define columns for head-to-head sheets
@@ -57,7 +57,7 @@ head_to_head_columms = ['Player',\
                          'WB',\
                          'LB',\
                          'Points',\
-                         'Normalised Score'
+                         'Percentage'
                          ]
 
 # Determine if you are running for an individual week or for the all weeks
@@ -141,7 +141,7 @@ for player in players:
         # Determine normalised score for master 
         for _, weekly_result in player_tables_df.iterrows():
             wk = weekly_result['Week']
-            n_score = weekly_result['Normalised Score']            
+            n_score = weekly_result['Percentage']            
             normalised_score += n_score*wk/triangular(week_num)
             # print(player, wk, n_score, normalised_score)
         normalised_score = int(normalised_score)
@@ -214,7 +214,7 @@ for player in players:
             vs_player_df[col] = vs_player_df[col].astype(int)
             
         # Sort values by points
-        vs_player_df = vs_player_df.sort_values(['Normalised Score', 'DIFF'], ascending=False)
+        vs_player_df = vs_player_df.sort_values(['Percentage', 'DIFF'], ascending=False)
         # print(vs_player_df)
         
         # Write to excel document
@@ -281,7 +281,7 @@ for col in weekly_stats_df.columns[1:]:
     weekly_stats_df[col] = weekly_stats_df[col].astype(int)
   
 # Sort values by points
-weekly_stats_df = weekly_stats_df.sort_values(['Normalised Score', 'DIFF'], ascending=False)
+weekly_stats_df = weekly_stats_df.sort_values(['Percentage', 'DIFF'], ascending=False)
 # print(weekly_stats_df)
 
 if master:
