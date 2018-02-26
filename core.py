@@ -13,13 +13,13 @@ def triangular(n):
     return sum(range(n+1))
 
 # Define file variables
-weekly_file = 'Squash_results.xlsx'
+weekly_file = 'Squash_results_2018.xlsx'
 # squash_path = 'C:\\Users\\beano\\Google Drive\\Squash\\'
-squash_path = 'C:\\Users\\brwaters\\Google Drive\\Squash\\'
+squash_path = 'C:\\Users\\brwaters\\Documents\\GitHub\\Squash\\'
 
 # Define switches
-week_num = 9
-master = 1
+week_num = 1
+master = 0
 
 # Define Bonus points
 win_points = 3
@@ -33,39 +33,39 @@ writer.book = book
 writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 
 # Define columns for statistics
-stats_columms = ['Name',\
-                 'PL',\
-                 'W',\
-                 'L',\
-                 'PF',\
-                 'PA',\
-                 'DIFF',\
-                 'WB',\
-                 'LB',\
-                 'Points',\
+stats_columms = ['Name',
+                 'PL',
+                 'W',
+                 'L',
+                 'PF',
+                 'PA',
+                 'DIFF',
+                 'WB',
+                 'LB',
+                 'Points',
                  'Percentage'
                  ]
 
 # Define columns for head-to-head sheets
-head_to_head_columms = ['Player',\
-                         'PL',\
-                         'W',\
-                         'L',\
-                         'PF',\
-                         'PA',\
-                         'DIFF',\
-                         'WB',\
-                         'LB',\
-                         'Points',\
+head_to_head_columms = ['Player',
+                         'PL',
+                         'W',
+                         'L',
+                         'PF',
+                         'PA',
+                         'DIFF',
+                         'WB',
+                         'LB',
+                         'Points',
                          'Percentage'
                          ]
 
 # Determine if you are running for an individual week or for the all weeks
 if master:
     # Read in all weeks results
-    for week in range(1,week_num+1):
-        tmp_games_df = pd.read_excel(squash_path + weekly_file, sheetname='Week{0}_games'.format(week))
-        tmp_tables_df = pd.read_excel(squash_path + weekly_file, sheetname='Week{0}_table'.format(week))
+    for week in range(1, week_num+1):
+        tmp_games_df = pd.read_excel(squash_path + weekly_file, sheet_name='Week{0}_games'.format(week))
+        tmp_tables_df = pd.read_excel(squash_path + weekly_file, sheet_name='Week{0}_table'.format(week))
         
         if week == 1:
             weekly_games_df = tmp_games_df
@@ -78,7 +78,7 @@ if master:
             #print(weekly_games_df)
 else:
     # Read in weekly tab
-    weekly_games_df = pd.read_excel(squash_path + weekly_file, sheetname='Week{0}_games'.format(week_num))
+    weekly_games_df = pd.read_excel(squash_path + weekly_file, sheet_name='Week{0}_games'.format(week_num))
 
 # Obtain list of players
 players_tmp = weekly_games_df['Player 1'].unique().tolist() + weekly_games_df['Player 2'].unique().tolist()
